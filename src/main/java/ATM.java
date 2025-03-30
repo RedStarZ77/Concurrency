@@ -1,7 +1,7 @@
 public class ATM {
     int value = 1000;
 
-    public void cashDec(String name, int cash) {
+    public synchronized void cashDec(String name, int cash) {
         System.out.println(name + " подошёл к банкомату");
         try {
             Thread.sleep(2000);

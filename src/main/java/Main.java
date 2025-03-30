@@ -14,33 +14,18 @@ public class Main {
         Thread thread2 = new Thread(new Runnable() {
             @Override
             public void run() {
-                try {
-                    thread1.join();
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
                 atm.cashDec("Коля", 250);
             }
         });
         Thread thread3 = new Thread(new Runnable() {
             @Override
             public void run() {
-                try {
-                    thread2.join();
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
                 atm.cashDec("Костя", 500);
             }
         });
         Thread thread4 = new Thread(new Runnable() {
             @Override
             public void run() {
-                try {
-                    thread3.join();
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
                 atm.cashDec("Маша", 250);
             }
         });
