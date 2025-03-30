@@ -1,5 +1,3 @@
-import java.util.ArrayList;
-
 public class Concurrency {
     public static void withConcurrency() {
         float[] list = new float[10_000_000];
@@ -40,7 +38,7 @@ public class Concurrency {
         System.arraycopy(list1, 0, list, 0, 5_000_000);
         System.arraycopy(list2, 0, list, 5_000_000, 5_000_000);
         long after = System.currentTimeMillis();
-        System.out.println("Time with concurrency: " + (after - before));
+        System.out.println("Время с потоками: " + (after - before));
     }
 
     public static void withoutConcurrency() {
@@ -50,9 +48,10 @@ public class Concurrency {
         }
         long before = System.currentTimeMillis();
         for (int i = 0; i < 10_000_000; i++) {
-            list[i] = (float) (list[i] * Math.sin(0.2f + i / 5) * Math.cos(0.2f + i / 5) * Math.cos(0.4 + i / 2));
+            float f = (float) i + 4_999_999;
+            list[i] = (float) (list[i] * Math.sin(0.2f + f / 5) * Math.cos(0.2f + f / 5) * Math.cos(0.4 + f / 2));
         }
         long after = System.currentTimeMillis();
-        System.out.println("Time without concurrency: " + (after - before));
+        System.out.println("Время без потоков: " + (after - before));
     }
 }
