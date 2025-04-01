@@ -1,68 +1,52 @@
-import java.util.ArrayList;
-import java.util.Random;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 public class Main {
 
     public static void main(String[] args) {
-        long before = System.currentTimeMillis();
-        ExecutorService executorService = Executors.newFixedThreadPool(3);
-        CountDownLatch countDownLatch = new CountDownLatch(3);
-        executorService.execute(new Runnable() {
+        ExecutorService executorService = Executors.newFixedThreadPool(3, new ThreadFactory() {
             @Override
-            public void run() {
-                long result = 0;
-                for (int i = 0; i <= 1_000_000; i++) {
-                    if (i % 2 == 0) {
-                        result += i;
-                    }
-                }
-                System.out.println("Сумма всех чётных чисел до миллиона: " + result);
-                countDownLatch.countDown();
+            public Thread newThread(Runnable r) {
+                Thread thread = new Thread(r);
+                thread.setDaemon(true);
+                return thread;
             }
         });
         executorService.execute(new Runnable() {
             @Override
             public void run() {
-                long result = 0;
-                for (int i = 0; i <= 1_000_000; i++) {
-                    if (i % 7 == 0) {
-                        result += i;
+                try {
+                    while (true) {
+                        System.out.print(".");
+                        Thread.sleep(300);
                     }
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
                 }
-                System.out.println("Сумма всех чисел, которые делятся на 7 без остатка до миллиона: " + result);
-                countDownLatch.countDown();
             }
         });
-        executorService.execute(new Runnable() {
+        Future<String> futureName = executorService.submit(new Callable<String>() {
             @Override
-            public void run() {
-                Random random = new Random();
-                int randomNumber;
-                ArrayList<Integer> array = new ArrayList<>(100);
-                for (int i = 0; i < 100; i++) {
-                    randomNumber = random.nextInt(1000);
-                    array.add(randomNumber);
-                }
-                long result = 0;
-                for (Integer arr : array) {
-                    if (arr % 2 == 0) {
-                        result += arr;
-                    }
-                }
-                System.out.println("Заполнив коллекцию 1000 элементами и получив сумму чётных чисел в ней, результат: " + result);
-                countDownLatch.countDown();
+            public String call() throws Exception {
+                Thread.sleep(5000);
+                return "John";
             }
         });
-        executorService.shutdown();
+        Future<Integer> futureAge = executorService.submit(new Callable<Integer>() {
+            @Override
+            public Integer call() throws Exception {
+                Thread.sleep(4000);
+                return 40;
+            }
+        });
         try {
-            countDownLatch.await();
+            String name = futureName.get();
+            int age = futureAge.get();
+            System.out.println("\nИмя: " + name);
+            System.out.println("Возраст: " + age);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
         }
-        long after = System.currentTimeMillis();
-        System.out.println("Времени было потрачено: " + (after - before));
     }
 }
