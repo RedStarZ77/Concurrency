@@ -1,52 +1,34 @@
-import java.util.concurrent.*;
-
 public class Main {
 
     public static void main(String[] args) {
-        ExecutorService executorService = Executors.newFixedThreadPool(3, new ThreadFactory() {
-            @Override
-            public Thread newThread(Runnable r) {
-                Thread thread = new Thread(r);
-                thread.setDaemon(true);
-                return thread;
-            }
-        });
-        executorService.execute(new Runnable() {
+        BlockingQueue blockingQueue = new BlockingQueue();
+        new Thread(new Runnable() {
             @Override
             public void run() {
-                try {
-                    while (true) {
-                        System.out.print(".");
-                        Thread.sleep(300);
+                int i = 0;
+                while (true) {
+                    System.out.println("Counter: "+i);
+                    i++;
+                    Runnable task = blockingQueue.take();
+                    if (task != null) {
+                        new Thread(task).start();
                     }
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
                 }
             }
-        });
-        Future<String> futureName = executorService.submit(new Callable<String>() {
-            @Override
-            public String call() throws Exception {
-                Thread.sleep(5000);
-                return "John";
-            }
-        });
-        Future<Integer> futureAge = executorService.submit(new Callable<Integer>() {
-            @Override
-            public Integer call() throws Exception {
-                Thread.sleep(4000);
-                return 40;
-            }
-        });
-        try {
-            String name = futureName.get();
-            int age = futureAge.get();
-            System.out.println("\nИмя: " + name);
-            System.out.println("Возраст: " + age);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        } catch (ExecutionException e) {
-            throw new RuntimeException(e);
+        }).start();
+        for (int i = 0; i < 10; i++) {
+            final int index = i;
+            blockingQueue.add(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                    System.out.println("---" + index);
+                }
+            });
         }
     }
 }
