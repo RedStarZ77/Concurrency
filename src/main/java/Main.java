@@ -1,34 +1,68 @@
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+
 public class Main {
 
+    private static final Object MONITOR = new Object();
+    private static String nextLetter = "A";
+
     public static void main(String[] args) {
-        BlockingQueue blockingQueue = new BlockingQueue();
         new Thread(new Runnable() {
             @Override
             public void run() {
-                int i = 0;
-                while (true) {
-                    System.out.println("Counter: "+i);
-                    i++;
-                    Runnable task = blockingQueue.take();
-                    if (task != null) {
-                        new Thread(task).start();
+                synchronized (MONITOR) {
+                    for (int i = 0; i < 5; i++) {
+                        try {
+                            while (!nextLetter.equals("A")){
+                                MONITOR.wait();
+                            }
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                        System.out.print("A");
+                        nextLetter = "B";
+                        MONITOR.notifyAll();
                     }
                 }
             }
         }).start();
-        for (int i = 0; i < 10; i++) {
-            final int index = i;
-            blockingQueue.add(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                synchronized (MONITOR) {
+                    for (int i = 0; i < 5; i++) {
+                        try {
+                            while (!nextLetter.equals("B")){
+                                MONITOR.wait();
+                            }
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                        System.out.print("B");
+                        nextLetter = "C";
+                        MONITOR.notifyAll();
                     }
-                    System.out.println("---" + index);
                 }
-            });
-        }
+            }
+        }).start();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                synchronized (MONITOR) {
+                    for (int i = 0; i < 5; i++) {
+                        try {
+                            while (!nextLetter.equals("C")){
+                                MONITOR.wait();
+                            }
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                        System.out.print("C");
+                        nextLetter = "A";
+                        MONITOR.notifyAll();
+                    }
+                }
+            }
+        }).start();
     }
 }
