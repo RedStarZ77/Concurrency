@@ -1,50 +1,46 @@
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
 
 public class Main {
 
     public static void main(String[] args) {
-        List<Integer> numbers = Collections.synchronizedList(new ArrayList<>());
-        CountDownLatch countDownLatch = new CountDownLatch(2);
-        final Object monitor = new Object();
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    for (int i = 0; i < 100; i++) {
-                        Thread.sleep(100);
-                        numbers.add(i);
+        ExecutorService executorService = Executors.newFixedThreadPool(3);
+        Semaphore semaphore = new Semaphore(3);
+        for (int i = 0; i < 10; i++) {
+            executorService.execute(new Runnable() {
+                @Override
+                public void run() {
+                    String name = Thread.currentThread().getName();
+                    System.out.println(name + " started preparing");
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
                     }
-                    countDownLatch.countDown();
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }).start();
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    for (int i = 0; i < 100; i++) {
-                        Thread.sleep(100);
-                            numbers.add(i);
+                    try {
+                        semaphore.acquire();
+                        workWithFileSystem();
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    } finally {
+                        semaphore.release();
                     }
-                    countDownLatch.countDown();
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+                    System.out.println(name + " finished working");
                 }
-            }
-        }).start();
+            });
+        }
+        executorService.shutdown();
+    }
+
+    private static void workWithFileSystem() {
+        String name = Thread.currentThread().getName();
+        System.out.println(name + " started working with file system");
         try {
-            countDownLatch.await();
+            Thread.sleep(1000);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        System.out.println(numbers.size());
-        for (int number : numbers) {
-            System.out.println(number);
-        }
+        System.out.println(name + " finished working with file system");
     }
 }
